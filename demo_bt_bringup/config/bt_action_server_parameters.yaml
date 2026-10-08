@@ -1,0 +1,14 @@
+bt_action_server:
+  ros__parameters:
+    action_name: "behavior_server" # Optional (defaults to `bt_action_server`)
+    # tick_frequency: 100 # Optional (defaults to 100 Hz)
+    # groot2_port: 1668 # Optional (defaults to 1667)
+    # ros_plugins_timeout: 1000  # Optional (defaults 1000 ms)
+
+    plugins:
+      - samxl_bt_ros_utils/bt_plugins
+      - samxl_bt_moveit/bt_plugins
+      - demo_bt_plugins/bt_plugins
+
+    behavior_trees:
+      - demo_bt_bringup/trees

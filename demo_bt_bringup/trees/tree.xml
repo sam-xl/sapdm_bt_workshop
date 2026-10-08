@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../model/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<root BTCPP_format="4">
+    <include ros_pkg="demo_bt_bringup" path="trees/primitives.xml" />
+
+    <!-- Your code goes here -->
+</root>

@@ -1,0 +1,9 @@
+<library path="nxtgen_rviz_behaviortree">
+    <class name="nxtgen_rviz_behaviortree/ExecuteTree"
+        type="samxl::rviz::ExecuteTreePanel"
+        base_class_type="rviz_common::Panel">
+        <description>
+            Panel for executing behavior trees.
+        </description>
+    </class>
+</library>

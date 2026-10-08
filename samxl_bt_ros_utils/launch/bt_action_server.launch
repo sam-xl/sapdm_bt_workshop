@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://nobleo.github.io/ros2_launch_validation/ros2_launch.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<launch>
+  <arg name="tree_schema_path" default="" />
+  <arg name="tree_nodes_model_path" default="" />
+  <arg name="exit_after_writing_schema" default="false" />
+  <arg name="use_sim_time" default="false" />
+  <arg name="parameter_file" description="Path to yaml file containing parameters for bt_action_server." />
+  <!-- Add hidden bt_log_level argument for testing purposes -->
+  <node pkg="samxl_bt_ros_utils" exec="bt_action_server" output="screen"
+    ros_args="--log-level bt_action_server:=$(var bt_log_level 'info')">
+    <param from="$(var parameter_file)" />
+    <param name="tree_schema_path" value="$(var tree_schema_path)" />
+    <param name="tree_nodes_model_path" value="$(var tree_nodes_model_path)" />
+    <param name="exit_after_writing_schema" value="$(var exit_after_writing_schema)" />
+    <param name="use_sim_time" value="$(var use_sim_time)" />
+  </node>
+</launch>

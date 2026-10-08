@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://nobleo.github.io/ros2_launch_validation/ros2_launch.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<launch>
+    <!-- Multicast discovery over the many host interfaces (docker, wifi) is lossy;
+         pin Ignition Transport to loopback so the plugin subscribers are always discovered. -->
+    <set_env name="IGN_IP" value="127.0.0.1" />
+    <arg name="ur_type" default="ur10e" description="Type/series of used UR robot." />
+    <arg name="safety_limits" default="true"
+        description="Enables the safety limits controller if true." />
+    <arg name="runtime_config_package" default="ur_simulation_gz"
+        description="Package with the controller's configuration in the config folder. Usually the argument is not set; it enables use of a custom setup." />
+    <arg name="controllers_file" default="ur_controllers.yaml"
+        description="YAML file with the controllers configuration." />
+    <arg name="description_package" default="demo_bt_cell_description"
+        description="Description package with robot URDF/XACRO files. Usually the argument is not set; it enables use of a custom description." />
+    <arg name="description_file" default="demo_cell.urdf.xacro"
+        description="URDF/XACRO description file with the robot." />
+    <arg name="moveit_config_package" default="ur_moveit_config"
+        description="MoveIt config package with robot SRDF/XACRO files. Usually the argument is not set; it enables use of a custom MoveIt config." />
+    <arg name="moveit_config_file" default="ur.srdf.xacro"
+        description="MoveIt SRDF/XACRO description file with the robot." />
+    <arg name="prefix" default="&quot;&quot;"
+        description="Prefix of the joint names, useful for multi-robot setup. If changed, joint names in the controllers' configuration must also be updated." />
+    <arg name="initial_detach_timeout" default="30.0"
+        description="Seconds to keep detaching boxes at startup until Gazebo reports them detached." />
+    <arg name="attachment_parent_frame" default="wrist_3_link"
+        description="TF frame used as the attachment parent." />
+    <arg name="attachment_max_distance" default="0.15"
+        description="Maximum distance in meters allowed for an attachment request." />
+    <arg name="gazebo_gui" default="false"
+        description="Run the gazebo GUI." />
+
+    <include file="$(find-pkg-share demo_bt_bringup)/launch/ur_sim_control.launch.py">
+        <arg name="ur_type" value="$(var ur_type)" />
+        <arg name="safety_limits" value="$(var safety_limits)" />
+        <arg name="runtime_config_package" value="$(var runtime_config_package)" />
+        <arg name="controllers_file" value="$(var controllers_file)" />
+        <arg name="description_package" value="$(var description_package)" />
+        <arg name="description_file" value="$(var description_file)" />
+        <arg name="prefix" value="$(var prefix)" />
+        <arg name="launch_rviz" value="false" />
+        <arg name="gazebo_gui" value="$(var gazebo_gui)" />
+        <arg name="world_file" value="$(find-pkg-share demo_bt_cell_description)/urdf/world.sdf" />
+    </include>
+
+    <node pkg="ros_gz_bridge" exec="parameter_bridge" name="gazebo_box_pose_bridge"
+          output="screen"
+          args="/world/default/dynamic_pose/info@tf2_msgs/msg/TFMessage[ignition.msgs.Pose_V" />
+    <node pkg="demo_bt_bringup" exec="gazebo_box_tf_publisher.py"
+          name="gazebo_box_tf_publisher" output="screen" />
+    <node pkg="demo_bt_bringup" exec="gated_box_attacher.py"
+          name="suction_cup_controller" output="screen">
+        <param name="parent_frame" value="$(var attachment_parent_frame)" />
+        <param name="max_distance" value="$(var attachment_max_distance)" />
+        <param name="initial_detach_timeout" value="$(var initial_detach_timeout)" />
+    </node>
+    <node pkg="demo_bt_bringup" exec="reset_boxes.py"
+          name="reset_boxes" output="screen" />
+    <node pkg="demo_bt_bringup" exec="box_proximity_sensor.py"
+          name="box_proximity_sensor" output="screen" />
+    <node pkg="demo_bt_bringup" exec="conveyor_speed_overlay.py"
+          name="conveyor_speed_overlay" output="screen" />
+    <node pkg="ros_gz_bridge" exec="parameter_bridge" name="gazebo_suction_cup_bridge"
+        output="screen"
+        args="/box_1/detach@std_msgs/msg/Empty]ignition.msgs.Empty /box_2/detach@std_msgs/msg/Empty]ignition.msgs.Empty /box_3/detach@std_msgs/msg/Empty]ignition.msgs.Empty /box_4/detach@std_msgs/msg/Empty]ignition.msgs.Empty /box_5/detach@std_msgs/msg/Empty]ignition.msgs.Empty /box_1/attach@std_msgs/msg/Empty]ignition.msgs.Empty /box_2/attach@std_msgs/msg/Empty]ignition.msgs.Empty /box_3/attach@std_msgs/msg/Empty]ignition.msgs.Empty /box_4/attach@std_msgs/msg/Empty]ignition.msgs.Empty /box_5/attach@std_msgs/msg/Empty]ignition.msgs.Empty /model/box_1/detachable_joint/state@std_msgs/msg/String[ignition.msgs.StringMsg /model/box_2/detachable_joint/state@std_msgs/msg/String[ignition.msgs.StringMsg /model/box_3/detachable_joint/state@std_msgs/msg/String[ignition.msgs.StringMsg /model/box_4/detachable_joint/state@std_msgs/msg/String[ignition.msgs.StringMsg /model/box_5/detachable_joint/state@std_msgs/msg/String[ignition.msgs.StringMsg --ros-args -r /model/box_1/detachable_joint/state:=/box_1/joint_state -r /model/box_2/detachable_joint/state:=/box_2/joint_state -r /model/box_3/detachable_joint/state:=/box_3/joint_state -r /model/box_4/detachable_joint/state:=/box_4/joint_state -r /model/box_5/detachable_joint/state:=/box_5/joint_state -r /box_1/attach:=/box_1/attach_gated -r /box_2/attach:=/box_2/attach_gated -r /box_3/attach:=/box_3/attach_gated -r /box_4/attach:=/box_4/attach_gated -r /box_5/attach:=/box_5/attach_gated">
+        <param name="lazy" value="false" />
+    </node>
+
+    <include file="$(find-pkg-share ur_moveit_config)/launch/ur_moveit.launch.py">
+        <arg name="ur_type" value="$(var ur_type)" />
+        <arg name="safety_limits" value="$(var safety_limits)" />
+        <arg name="description_package" value="$(var description_package)" />
+        <arg name="description_file" value="$(var description_file)" />
+        <arg name="moveit_config_package" value="$(var moveit_config_package)" />
+        <arg name="moveit_config_file" value="$(var moveit_config_file)" />
+        <arg name="prefix" value="$(var prefix)" />
+        <arg name="use_sim_time" value="true" />
+        <arg name="launch_rviz" value="false" />
+    </include>
+
+    <node pkg="rviz2" exec="rviz2" args="-d $(find-pkg-share demo_bt_bringup)/config/rviz.rviz">
+        <param name="use_sim_time" value="true" />
+    </node>
+
+    <include file="$(find-pkg-share samxl_bt_ros_utils)/launch/bt_action_server.launch">
+        <arg name="parameter_file" value="$(find-pkg-share demo_bt_bringup)/config/bt_action_server_parameters.yaml"/>
+        <arg name="use_sim_time" value="true" />
+    </include>
+
+</launch>

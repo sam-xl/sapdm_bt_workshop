@@ -1,0 +1,18 @@
+#pragma once
+
+/**
+ * This header needs to be included to ensure that the conversions declared
+ * here are properly linked and can be found by BehaviorTree.CPP at runtime.
+ *
+ * If this header is not used, BehaviorTree.CPP will issue the following warning for these types:
+ * `You (maybe indirectly) called BT::convertFromString() for type [T], but I can't find the template specialization.`
+ */
+
+#include <behaviortree_cpp/basic_types.h>
+
+#include <builtin_interfaces/msg/duration.hpp>
+#include <builtin_interfaces/msg/time.hpp>
+#include <samxl_bt_ros_utils/conversions/bt_conversions.hpp>
+
+HEADER_TYPE_CONVERT_FROM_STRING(builtin_interfaces::msg::Time)
+HEADER_TYPE_CONVERT_FROM_STRING(builtin_interfaces::msg::Duration)

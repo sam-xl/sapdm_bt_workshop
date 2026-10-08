@@ -1,0 +1,9 @@
+repositories:
+  behaviortree_ros2:
+    type: git
+    url: https://github.com/sam-xl/BehaviorTree.ROS2.git
+    version: ee879dfe60eef7b1718327d28b8653919862016f # ==feat/reload-xml on 2026-10-14
+  IFRA_ConveyorBelt:
+    type: git
+    url: https://github.com/IFRA-Cranfield/IFRA_ConveyorBelt
+    version: 9128aa1ecfdee01a24e6a1b6c1caa22aefaf3dc2 # ==humble-gzfortress on 2026-10-14

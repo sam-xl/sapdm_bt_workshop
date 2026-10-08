@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://nobleo.github.io/ros2_launch_validation/ros2_launch.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<!-- Starts a rosbag recorder without starting recording automatically -->
+<!-- Recording can be started using the /recorder/record service -->
+<!-- Recording can be stopped using the /recorder/stop service -->
+<!-- Note: Not windows compatible due to use of sh, exec, && and rm -->
+<launch version="0.1.0">
+    <arg name="recorder_node_name" default="rosbag2_recorder"
+        description="Name of the recorder node." />
+    <arg
+        name="temporary_startup_rosbag_path"
+        default="/tmp/rosbag_startup_$(var recorder_node_name)"
+        description="Path to a temporary folder for dumping the rosbag created during statup. The folder is automatically deleted." />
+    <arg
+        name="recorder_config_file"
+        default="$(find-pkg-share samxl_bt_ros_utils)/config/default_rosbag_config.yaml"
+        description="Path to a yaml file for reading parameters for the recorder." />
+
+    <node_container
+        launch-prefix="sh -c 'rm -rf $(var temporary_startup_rosbag_path) &amp;&amp; sleep 0.1s &amp;&amp; exec $0 $@'"
+        name="composable_container" namespace="" pkg="rclcpp_components"
+        exec="component_container">
+        <composable_node pkg="rosbag2_transport" plugin="rosbag2_transport::Recorder"
+            name="$(var recorder_node_name)">
+            <param from="$(var recorder_config_file)" allow_substs="true" />
+            <param name="storage.uri" value="$(var temporary_startup_rosbag_path)" />
+            <param name="record.start_paused" value="true" />
+            <param name="record.disable_keyboard_controls" value="true" />
+        </composable_node>
+    </node_container>
+
+    <!-- Immediately stop the automatically started bag and delete the temp files -->
+    <!-- Also unpauses afterwards, see https://github.com/ros2/rosbag2/issues/2409 -->
+    <executable
+        cmd="ros2 service call $(var recorder_node_name)/stop rosbag2_interfaces/srv/Stop {} &amp;&amp;
+        rm -rf $(var temporary_startup_rosbag_path) &amp;&amp;
+        ros2 service call $(var recorder_node_name)/resume rosbag2_interfaces/srv/Resume {}"
+        shell="true" />
+</launch>

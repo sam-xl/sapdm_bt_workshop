@@ -1,0 +1,5 @@
+repositories:
+  behaviortree_ros2:
+    type: git
+    url: https://github.com/sam-xl/BehaviorTree.ROS2.git
+    version: d33543ca79a05c78e70380b636f38c56e5a0785f # fix/plugin-loading-order on 2026-05-26

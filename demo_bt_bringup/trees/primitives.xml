@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../model/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<root BTCPP_format="4">
+  <!-- Available primitive actions:
+       - ConveyorBeltControl
+         Call with <ConveyorBeltControl power="PERCENTAGE" service_name="/CONVEYORPOWER" />
+    -->
+
+  <!-- Available subtrees:
+       Call with <SubTree ID="NAME_OF_SUBTREE" /> or
+                 <SubTree ID="NAME_OF_SUBTREE" PORT="VALUE" />
+    -->
+  <BehaviorTree ID="MoveToHome">
+    <Sequence>
+      <PlanJointState group_name="ur_manipulator"
+        joint_state="{header: {frame_id: ''},
+                name: ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 'wrist_1_joint',
+                       'wrist_2_joint', 'wrist_3_joint'],
+                position: [0.0, -2.269, 1.920, -1.222, -1.571, 0.0],
+                velocity: [], effort: []} ---"
+        trajectory="{=}" service_name="/plan_kinematic_path" />
+      <ExecuteFJT trajectory="{=}"
+        action_name="/joint_trajectory_controller/follow_joint_trajectory" />
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="MoveToPickupLocation">
+    <Sequence>
+      <PlanCartesian group_name="ur_manipulator" link_name="tool0"
+        waypoints="{header: {frame_id: world}, poses: [{position: {x: 0.5, y: 0.50, z: 0.7415}, orientation: {x: 1.0, y: 0.0, z: 0.0, w: 0.0}}]} ---"
+        max_step="0.01" jump_threshold="0.0"
+        max_velocity_scaling_factor="0.5"
+        max_acceleration_scaling_factor="0.5"
+        trajectory="{=}" service_name="/compute_cartesian_path" />
+      <ExecuteFJT trajectory="{=}"
+        action_name="/joint_trajectory_controller/follow_joint_trajectory" />
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="MoveToPrePickupLocation">
+    <Sequence>
+      <PlanCartesian group_name="ur_manipulator" link_name="tool0"
+        waypoints="{header: {frame_id: world}, poses: [{position: {x: 0.2, y: 0.50, z: 0.9}, orientation: {x: 1.0, y: 0.0, z: 0.0, w: 0.0}}]} ---"
+        max_step="0.01" jump_threshold="0.0"
+        max_velocity_scaling_factor="0.5"
+        max_acceleration_scaling_factor="0.5"
+        trajectory="{=}" service_name="/compute_cartesian_path" />
+      <ExecuteFJT trajectory="{=}"
+        action_name="/joint_trajectory_controller/follow_joint_trajectory" />
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="MoveToDropoffA">
+    <Sequence>
+      <PlanCartesian group_name="ur_manipulator" link_name="tool0"
+        waypoints="{header: {frame_id: world}, poses: [{position: {x: 0.0, y: 0.50, z: 0.4}, orientation: {x: 1.0, y: 0.0, z: 0.0, w: 0.0}}]} ---"
+        max_step="0.01" jump_threshold="0.0"
+        max_velocity_scaling_factor="0.5"
+        max_acceleration_scaling_factor="0.5"
+        trajectory="{=}" service_name="/compute_cartesian_path" />
+      <ExecuteFJT trajectory="{=}"
+        action_name="/joint_trajectory_controller/follow_joint_trajectory" />
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="MoveToDropoffB">
+    <Sequence>
+      <PlanCartesian group_name="ur_manipulator" link_name="tool0"
+        waypoints="{header: {frame_id: world}, poses: [{position: {x: 0.0, y: 0.80, z: 0.4}, orientation: {x: 1.0, y: 0.0, z: 0.0, w: 0.0}}]} ---"
+        max_step="0.01" jump_threshold="0.0"
+        max_velocity_scaling_factor="0.5"
+        max_acceleration_scaling_factor="0.5"
+        trajectory="{=}" service_name="/compute_cartesian_path" />
+      <ExecuteFJT trajectory="{=}"
+        action_name="/joint_trajectory_controller/follow_joint_trajectory" />
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="SuctionCupOn">
+    <Trigger service_name="/suction_cup/attach" />
+  </BehaviorTree>
+
+  <BehaviorTree ID="SuctionCupOff">
+    <Trigger service_name="/suction_cup/detach" />
+  </BehaviorTree>
+
+  <BehaviorTree ID="MagnetOn">
+    <Trigger service_name="/magnet/attach" />
+  </BehaviorTree>
+
+  <BehaviorTree ID="MagnetOff">
+    <Trigger service_name="/magnet/detach" />
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="ObjectDetected">
+    <Sequence>
+      <Sleep msec="50" />
+      <RetryUntilSuccessful num_attempts="20">
+        <Fallback>
+          <SubscribeBool topic_name="/sensor_1/detected" output="{sensor_1_detected}" />
+          <Sequence>
+            <Sleep msec="50" />
+            <AlwaysFailure />
+          </Sequence>
+        </Fallback>
+      </RetryUntilSuccessful>
+      <ScriptCondition code="sensor_1_detected" />
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Available ports: color (string) -->
+  <BehaviorTree ID="ObjectHasColor">
+    <Sequence>
+      <RetryUntilSuccessful num_attempts="20">
+        <Fallback>
+          <SubscribeString topic_name="/sensor_1/color" output="{sensor_1_color}" />
+          <Sequence>
+            <Sleep msec="50" />
+            <AlwaysFailure />
+          </Sequence>
+        </Fallback>
+      </RetryUntilSuccessful>
+      <ScriptCondition code="sensor_1_color == color" />
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- For convenience. Do not call this automatically, only use it to manually reset the
+  environment. -->
+  <BehaviorTree ID="ResetBoxes">
+    <Trigger service_name="/reset_boxes" />
+  </BehaviorTree>
+</root>

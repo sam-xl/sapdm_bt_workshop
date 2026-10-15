@@ -28,12 +28,15 @@
 #
 # Author: Denis Stogl
 
+import os
+
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     OpaqueFunction,
     RegisterEventHandler,
+    SetEnvironmentVariable,
 )
 from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
@@ -82,6 +85,9 @@ def launch_setup(context, *args, **kwargs):
                 [FindPackageShare(description_package), "urdf", description_file]
             ),
             " ",
+            "ur_type:=",
+            ur_type,
+            " ",
             "safety_limits:=",
             safety_limits,
             " ",
@@ -94,9 +100,6 @@ def launch_setup(context, *args, **kwargs):
             "name:=",
             "ur",
             " ",
-            "ur_type:=",
-            ur_type,
-            " ",
             "prefix:=",
             prefix,
             " ",
@@ -107,39 +110,39 @@ def launch_setup(context, *args, **kwargs):
         ]
     )
     robot_description_content_boxes = Command(
-            [
-                PathJoinSubstitution([FindExecutable(name="xacro")]),
-                " ",
-                PathJoinSubstitution(
-                    [FindPackageShare(description_package), "urdf", description_file]
-                ),
-                " ",
-                "safety_limits:=",
-                safety_limits,
-                " ",
-                "safety_pos_margin:=",
-                safety_pos_margin,
-                " ",
-                "safety_k_position:=",
-                safety_k_position,
-                " ",
-                "name:=",
-                "ur",
-                " ",
-                "ur_type:=",
-                ur_type,
-                " ",
-                "prefix:=",
-                prefix,
-                " ",
-                "sim_ignition:=true",
-                " ",
-                "urdf_boxes:=true",
-                            " ",
-                "simulation_controllers:=",
-                initial_joint_controllers,
-            ]
-        )
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution(
+                [FindPackageShare(description_package), "urdf", description_file]
+            ),
+            " ",
+            "ur_type:=",
+            ur_type,
+            " ",
+            "safety_limits:=",
+            safety_limits,
+            " ",
+            "safety_pos_margin:=",
+            safety_pos_margin,
+            " ",
+            "safety_k_position:=",
+            safety_k_position,
+            " ",
+            "name:=",
+            "ur",
+            " ",
+            "prefix:=",
+            prefix,
+            " ",
+            "sim_ignition:=true",
+            " ",
+            "urdf_boxes:=true",
+            " ",
+            "simulation_controllers:=",
+            initial_joint_controllers,
+        ]
+    )
     robot_description = {"robot_description": robot_description_content_boxes}
 
     robot_state_publisher_node = Node(
@@ -227,7 +230,20 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
     )
 
+    # Make the ign_ros2_control system plugin discoverable by Gazebo
+    prefixes = [os.environ.get("CONDA_PREFIX", "")] + os.environ.get(
+        "AMENT_PREFIX_PATH", ""
+    ).split(os.pathsep)
+    plugin_paths = [os.path.join(p, "lib") for p in prefixes if p] + [
+        os.environ.get("IGN_GAZEBO_SYSTEM_PLUGIN_PATH", "")
+    ]
+    set_plugin_path = SetEnvironmentVariable(
+        "IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+        os.pathsep.join(p for p in plugin_paths if p and p != "lib"),
+    )
+
     nodes_to_start = [
+        set_plugin_path,
         robot_state_publisher_node,
         joint_state_broadcaster_spawner,
         delay_rviz_after_joint_state_broadcaster_spawner,

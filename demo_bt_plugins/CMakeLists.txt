@@ -22,8 +22,8 @@ target_include_directories(${PROJECT_NAME}_plugins
 target_link_libraries(${PROJECT_NAME}_plugins PUBLIC
   behaviortree_cpp::behaviortree_cpp
   behaviortree_ros2::behaviortree_ros2
-  conveyorbelt_msgs::conveyorbelt_msgs
 )
+ament_target_dependencies(${PROJECT_NAME}_plugins PUBLIC conveyorbelt_msgs)
 target_compile_definitions(${PROJECT_NAME}_plugins PRIVATE BT_PLUGIN_EXPORT)
 
 install(DIRECTORY include/ DESTINATION include)

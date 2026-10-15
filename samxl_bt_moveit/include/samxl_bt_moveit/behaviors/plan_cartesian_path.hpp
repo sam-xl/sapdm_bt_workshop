@@ -46,8 +46,8 @@ public:
     getInput("link_name", request->link_name);
     getInput("max_step", request->max_step);
     getInput("jump_threshold", request->jump_threshold);
-    getInput("max_velocity_scaling_factor", request->max_velocity_scaling_factor);
-    getInput("max_acceleration_scaling_factor", request->max_acceleration_scaling_factor);
+    // getInput("max_velocity_scaling_factor", request->max_velocity_scaling_factor);
+    // getInput("max_acceleration_scaling_factor", request->max_acceleration_scaling_factor);
 
     geometry_msgs::msg::PoseArray waypoints;
     auto waypoints_result = getInput("waypoints", waypoints);
